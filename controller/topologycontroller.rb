@@ -33,8 +33,8 @@ class TopologyController
       swjs.each do | swj, port_number |
         puts "ERROR" unless @path.include?(swi)
         @path[swi] = {} unless @path.include?(swi) # add by morimoto
-        #puts "path[#{swi}] = #{@path[swi]}"
-        #puts "path[#{swi}][#{swj}] = #{@path[swi][swj]}"
+        puts "path[#{swi}] = #{@path[swi]}"
+        puts "path[#{swi}][#{swj}] = #{@path[swi][swj]}"
         @path[swi][swj] = {:intermediate_dpid => nil, :link_weight => 1}
       end
     end
