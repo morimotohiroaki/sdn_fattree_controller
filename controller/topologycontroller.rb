@@ -42,10 +42,9 @@ class TopologyController
       @topology.each_switch do | swi |
         @topology.each_switch do | swj |
           # puts "swk=#{swk}  swi=#{swi} swj=#{swj} swk=#{swj}"
-          if @path[swi][swk][:link_weight]
+          if @path[swi][swk][:link_weight]  
             if @path[swk][swj][:link_weight]
-              ikj_weight = @path[swi][swk][:link_weight]\
-              + @path[swk][swj][:link_weight]
+              ikj_weight = @path[swi][swk][:link_weight] + @path[swk][swj][:link_weight]
               if !@path[swi][swj][:link_weight]\
                 or ikj_weight < @path[swi][swj][:link_weight]
                # puts "swk=#{swk}  swi=#{swi} swj=#{swj} swk=#{swj} !!!"
@@ -53,26 +52,26 @@ class TopologyController
                # puts "ikj = #{ikj_weight}"
                 puts ""
                 @path[swi][swj] = {:intermediate_dpid => swk, :link_weight => ikj_weight, :path_number => 1}
-                puts "#{swi} to #{swj} -> #{@path[swi][swj]}"
-              elsif ikj_weight = @path[swi][swj][:link_weight]\
-              and @path[swi][swj][:intermediate_dpid] != nil\
-              and @path[swi][swj][:intermediate_dpid] != swk \
-              and @path[swi][swj][:path_number] < 2
-               # puts "intermidiate = #{@path[swi][swj][:intermediate_dpid]}"
-                number_path = @path[swi][swj][:path_number] + 1
-               # puts "#{number_path}"
-                @path[swi][swj] = {:intermediate_dpid => swk, :link_weight => ikj_weight, :path_number => number_path}
-                puts "#{swi} to #{swj} -> #{@path[swi][swj]}"
+               # puts "#{swi} to #{swj} -> #{@path[swi][swj]}"
+              elsif ikj_weight == @path[swi][swj][:link_weight]\
+                and @path[swi][swj][:link_weight] != 0\
+                and @path[swi][swj][:link_weight] != 1\
+                and @path[swi][swj][:intermediate_dpid] != swk \
+                and swi != swk and swj != swk
+                 # puts "intermidiate = #{@path[swi][swj][:intermediate_dpid]}"
+                 number_path = @path[swi][swj][:path_number] + 1
+                 # puts "#{number_path}"
+                 @path[swi][swj] = {:intermediate_dpid => swk, :link_weight => ikj_weight, :path_number => number_path}
               end
             end
           end
         end
       end
     end
-    self.topology.display
-    puts " "
-    #display_path
-    puts "end!!!"
+   # self.topology.display
+   # puts " "
+   # display_path
+   # puts "count !"
   end
 
   def calculate_levels
@@ -154,6 +153,7 @@ class TopologyController
       return nil
     end
     intermediate = @path[src_switch][dst_switch][:intermediate_dpid]
+    #puts "src = #{src_switch}, dst =#{dst_switch}, inter = #{@path[src_switch][dst_switch][:intermediate_dpid]}"
     return [] unless intermediate
     return get_raw_path(src_switch, intermediate)\
     + [intermediate]\
