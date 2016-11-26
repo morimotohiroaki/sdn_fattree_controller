@@ -78,11 +78,11 @@ class BcastController < Controller # (1)
     # for debuggin show all new packets
      mac = Util.get_mac_address(packet_in)
      ip = Util.get_ip_address(packet_in)
-    #  puts "new packet arrived... on #{dpid}: #{mac[:source]},"\
+      puts "new packet arrived... on #{dpid}: #{mac[:source]},"\
      "#{ip[:source]} -> #{mac[:target]}, #{ip[:target]}" unless packet_in.lldp?
       
     if packet_in.lldp?
-      # puts "Lldp packet came to #{dpid}"
+      puts "Lldp packet came to #{dpid}"
 
       lldp = Util.read_lldp_packet_data(packet_in)
       @network.topology.add_link lldp.dpid, lldp.port_number,\
@@ -96,7 +96,7 @@ class BcastController < Controller # (1)
       if @network.topology.check_mac_map?(mac[:target])
         src_mac_map = @network.topology.mac_map[mac[:source]]
         dst_mac_map = @network.topology.mac_map[mac[:target]]
-        # puts "installing rules : #{ip[:source]} to #{ip[:target]}"
+        puts "installing rules : #{ip[:source]} to #{ip[:target]}"
         # installing path rule for src_mac to dst_mac
         out_port = install_path src_mac_map, dst_mac_map, mac[:source],\
         ip[:source], mac[:target], ip[:target], packet_in
@@ -105,7 +105,7 @@ class BcastController < Controller # (1)
         mac[:source], ip[:source], packet_in
         packet_out dpid, packet_in, out_port.to_i
       else
-        # puts "Dont know this packet. Flooding..."
+        puts "Dont know this packet. Flooding..."
         packet_out dpid, packet_in, OFPP_FLOOD
       end
     end
@@ -177,7 +177,7 @@ class BcastController < Controller # (1)
   end
   
   def flow_mod dpid, mac_src, ip_src, mac_dst, ip_dst, packet_in, port_number
-    # puts "installing #{dpid}: #{mac_src}, #{ip_src} => #{ip_dst}, #{mac_dst}"
+    puts "installing #{dpid}: #{mac_src}, #{ip_src} => #{ip_dst}, #{mac_dst}"
     send_flow_mod_add(dpid,
                       :match => Match.new(:dl_src => mac_src,
                                           :nw_src => ip_src,
@@ -196,11 +196,11 @@ class BcastController < Controller # (1)
   
   def flood_lldp_frames
     @network.topology.each_switch do | dpid |
-      #puts "Sending lldp to #{dpid}"
+      puts "Sending lldp to #{dpid}"
       ports = @network.topology.ports[dpid]
       ports.each do | port |
         port_number = port.number
-        #puts "    : port -> #{port_number}"
+        puts "    : port -> #{port_number}"
         send_packet_out(dpid,
                         :actions => SendOutPort.new(port_number),
                         :data => Util.lldp_binary_string(dpid, port_number))
