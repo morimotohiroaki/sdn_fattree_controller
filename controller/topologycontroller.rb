@@ -53,13 +53,13 @@ class TopologyController
                 puts ""
                 @path[swi][swj] = {:intermediate_dpid => swk, :link_weight => ikj_weight}
                # puts "#{swi} to #{swj} -> #{@path[swi][swj]}"
-              elsif ikj_weight == @path[swi][swj][:link_weight]\
-                and @path[swi][swj][:link_weight] != 0\
-                and @path[swi][swj][:link_weight] != 1\
-                and @path[swi][swj][:intermediate_dpid] != swk \
-                and swi != swk and swj != swk
+                elsif ikj_weight == @path[swi][swj][:link_weight]\
+                 and @path[swi][swj][:link_weight] != 0\
+                 and @path[swi][swj][:link_weight] != 1\
+                 and @path[swi][swj][:intermediate_dpid] != swk \
+                 and swi != swk and swj != swk
                  # puts "intermidiate = #{@path[swi][swj][:intermediate_dpid]}"
-                 number_path = 2
+                 number_path = 2 unless @path[swi][swj][:path_number]
                  number_path = @path[swi][swj][:path_number] + 1 if @path[swi][swj][:path_number]
                  number_switch = "no." + number_path.to_s  + "switch"
                 # puts "#{number_path}"
@@ -74,7 +74,7 @@ class TopologyController
     end
    # self.topology.display
    # puts " "
-   # display_path
+    display_path
    # puts "count !"
   end
 
@@ -156,11 +156,15 @@ class TopologyController
     elsif !@path[src_switch][dst_switch][:link_weight]
       return nil
     end
-    if @path[src_switch][dst_switch][:path_number] != nil
-      puts "i have another route!"
-    end
-    intermediate = @path[src_switch][dst_switch][:intermediate_dpid]
+  #  if @path[src_switch][dst_switch][:path_number] != nil
+#      if src_switch == 16 and src_switch =="17"
+ #        puts "AAA===#{src_switch}"
+  #     end
+      intermediate = @path[src_switch][dst_switch]["no.2switch"]
+  #  elsif
+      intermediate = @path[src_switch][dst_switch][:intermediate_dpid]
     #puts "src = #{src_switch}, dst =#{dst_switch}, inter = #{@path[src_switch][dst_switch][:intermediate_dpid]}"
+  #  end
     return [] unless intermediate
     return get_raw_path(src_switch, intermediate)\
     + [intermediate]\
