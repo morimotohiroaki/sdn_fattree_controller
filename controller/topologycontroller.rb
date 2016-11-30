@@ -59,13 +59,18 @@ class TopologyController
                  and @path[swi][swj][:intermediate_dpid] != swk \
                  and swi != swk and swj != swk
                  # puts "intermidiate = #{@path[swi][swj][:intermediate_dpid]}"
-                 number_path = 2 unless @path[swi][swj][:path_number]
-                 number_path = @path[swi][swj][:path_number] + 1 if @path[swi][swj][:path_number]
-                 number_switch = "no." + number_path.to_s  + "switch"
+                 #number_path = 2 unless @path[swi][swj][:path_number]
+                 #number_path = @path[swi][swj][:path_number] + 1 if @path[swi][swj][:path_number]
+                 #number_switch = "no." + number_path.to_s  + "switch"
                 # puts "#{number_path}"
                  #@path[swi][swj] = {:intermediate_dpid => swk, :link_weight => ikj_weight, :path_number => number_path}
-                 @path[swi][swj][:path_number] = number_path
-                 @path[swi][swj][number_switch] = swk
+                 #@path[swi][swj][:path_number] = number_path
+                 #@path[swi][swj][number_switch] = swk
+                  if swi == 17 and swj == 21
+                   @path[swi][swj] = {:intermediate_dpid => 18, :link_weight => ikj_weight}
+                  elsif swi == 17 and swj == 16
+                   @path[swi][swj] = {:intermediate_dpid => 20, :link_weight => ikj_weight}
+                  end
               end
             end
           end
