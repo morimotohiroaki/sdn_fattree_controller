@@ -171,7 +171,7 @@ class BcastController < Controller # (1)
     src_switch = src_mac_map[:dpid]
     dst_switch = dst_mac_map[:dpid]
     final_port = dst_mac_map[:in_port]
-    r = @network.get_path1(src_switch, dst_switch, final_port)
+    r = @network.get_path(src_switch, dst_switch, final_port, 0)
     r.each do | sw |
       flow_mod(sw[:dpid], mac_src, ip_src, mac_dst, ip_dst, packet_in, sw[:out_port])
     end
@@ -258,7 +258,19 @@ class BcastController < Controller # (1)
     slaves.each do | s |
       dst_sw = @network.topology.mac_map[@network.topology.ip_mac[s]][:dpid]
       final_port = @network.topology.mac_map[@network.topology.ip_mac[s]][:in_port]
-      p = @network.get_path2(src_sw, dst_sw, final_port)
+      puts "wh!!!!"
+      abc = @network.check_check src_sw, dst_sw
+      if abc == 0
+       puts "aagsio"
+#        q = @network.get_path(src_sw, dst_sw, final_port, 1)     
+#        q.each do | map |
+#          sw1 = map[:dpid]
+#          out_port = map[:out_port].to_i
+#          @outPorts[sw1] = [] unless @outPorts.key?(sw1)
+#          @outPorts[sw1] << out_port unless @outPorts[sw1].include?(out_port)
+#        end
+      end
+      p = @network.get_path(src_sw, dst_sw, final_port, 0)
       p.each do | map |
         sw = map[:dpid]
         out_port = map[:out_port].to_i

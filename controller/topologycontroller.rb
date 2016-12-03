@@ -104,11 +104,11 @@ class TopologyController
   # get switch and port list between src_switch and dst_switch
   # src_switch, dst_switch -> dpid
   # return [{:dpid=>dpid, :out_port=>port},]
-  def get_path src_switch, dst_switch, final_port
+  def get_path src_switch, dst_switch, final_port, flag
     if src_switch == dst_switch
       p = [src_switch]
     else
-      p = get_raw_path(src_switch, dst_switch)
+      p = get_raw_path(src_switch, dst_switch, flag)
       return nil unless p
       p = [src_switch] + p + [dst_switch]
     end
@@ -129,7 +129,18 @@ class TopologyController
       end
     end
   end
-  
+ 
+  def display_path
+    @topology.each_switch do | swi |
+      @topology.each_switch do | swj |
+        puts swi.to_s + " to " + swj.to_s + " "\
+        + @path[swi][swj].to_s if @path[swi][swj] unless swi == swj 
+      end 
+    end 
+  end 
+
+
+ 
   def read_file
     File.open("topology-info").each_line do | each |
       if /(\d+)\s(\d+)\s(\d+)\s(\d+)/ =~ each
@@ -145,18 +156,27 @@ class TopologyController
     #end
   end
 
-  private
+  def check_check src_sw, dst_sw
+   puts "here!!!"
+    if @path[src_sw][dst_sw][:path_number]
+     aaa = 0
+     return aaa
+    else 
+     bbb = 1
+     return bbb
+    end
+  end
   
   # get switches through path between src_switch and dst_switch
   # src_switch, dst_switch -> dpid
-  # return [src_switch, dpid1,..., dpidi, dst_switch]
-  def get_raw_path src_switch, dst_switch
+  # return [src_switch, dpid1,..., dpidi, dst_swi
+  def get_raw_path src_switch, dst_switch, flag
     if src_switch == dst_switch
       return []
     elsif !@path[src_switch][dst_switch][:link_weight]
       return nil
     end
-    if @path[src_switch][dst_switch][:path_number] 
+    if @path[src_switch][dst_switch][:path_number] and flag == 1 
       puts "comen!!!"
       intermediate  = get_another_intermediate(src_switch, dst_switch)
     else
@@ -164,9 +184,9 @@ class TopologyController
     end
     #puts "src = #{src_switch}, dst =#{dst_switch}, inter = #{@path[src_switch][dst_switch][:intermediate_dpid]}"
     return [] unless intermediate
-    return get_raw_path(src_switch, intermediate)\
+    return get_raw_path(src_switch, intermediate, flag)\
     + [intermediate]\
-    + get_raw_path(intermediate, dst_switch)
+    + get_raw_path(intermediate, dst_switch, flag)
   end
 
   def get_another_intermediate src_switch, dst_switch
@@ -175,12 +195,10 @@ class TopologyController
     if @inter_switches.include?(check1) and @inter_switches.include?(check2)
       puts "1"
       @inter_switches.delete(check2)
-#      puts "after =  #{@inter_switches}"
       return check1
     elsif @inter_switches.include?(check1) and !@inter_switches.include?(check2)
        puts "2 =  #{@inter_switches}"
        @inter_switches.push(check2)
-     # puts "2 =  #{@inter_switches}"
       return check2
      elsif !@inter_switches.include?(check1) and @inter_switches.include?(check2)
        puts "3"
@@ -192,6 +210,5 @@ class TopologyController
        return check2
     end
   end
-
 
 end
