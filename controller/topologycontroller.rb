@@ -1,4 +1,3 @@
-
 require 'trema'
 require 'topology'
 
@@ -12,6 +11,7 @@ class TopologyController
     @switch_number = switch_number
     @path = {}        # [dpid1][dpid2] -> { :intermediate_dpid => dpid, :link_weight => weight }
     @level_sws = {}   # { 0=> [dpid,], }
+    @inter_switches = [] #[dpid1, dpid2, ...]
   end
 
   def ready?
@@ -53,24 +53,19 @@ class TopologyController
                 puts ""
                 @path[swi][swj] = {:intermediate_dpid => swk, :link_weight => ikj_weight}
                # puts "#{swi} to #{swj} -> #{@path[swi][swj]}"
-                elsif ikj_weight == @path[swi][swj][:link_weight]\
-                 and @path[swi][swj][:link_weight] != 0\
-                 and @path[swi][swj][:link_weight] != 1\
-                 and @path[swi][swj][:intermediate_dpid] != swk \
-                 and swi != swk and swj != swk
+              elsif ikj_weight == @path[swi][swj][:link_weight]\
+                and @path[swi][swj][:link_weight] != 0\
+                and @path[swi][swj][:link_weight] != 1\
+                and @path[swi][swj][:intermediate_dpid] != swk \
+                and swi != swk and swj != swk
                  # puts "intermidiate = #{@path[swi][swj][:intermediate_dpid]}"
-                 #number_path = 2 unless @path[swi][swj][:path_number]
-                 #number_path = @path[swi][swj][:path_number] + 1 if @path[swi][swj][:path_number]
-                 #number_switch = "no." + number_path.to_s  + "switch"
+                 number_path = 2
+                 number_path = @path[swi][swj][:path_number] + 1 if @path[swi][swj][:path_number]
+                 number_switch = "no." + number_path.to_s  + "switch"
                 # puts "#{number_path}"
                  #@path[swi][swj] = {:intermediate_dpid => swk, :link_weight => ikj_weight, :path_number => number_path}
-                 #@path[swi][swj][:path_number] = number_path
-                 #@path[swi][swj][number_switch] = swk
-                  if swi == 17 and swj == 21
-                   @path[swi][swj] = {:intermediate_dpid => 18, :link_weight => ikj_weight}
-                  elsif swi == 17 and swj == 16
-                   @path[swi][swj] = {:intermediate_dpid => 20, :link_weight => ikj_weight}
-                  end
+                 @path[swi][swj][:path_number] = number_path
+                 @path[swi][swj][number_switch] = swk
               end
             end
           end
@@ -161,19 +156,35 @@ class TopologyController
     elsif !@path[src_switch][dst_switch][:link_weight]
       return nil
     end
-  #  if @path[src_switch][dst_switch][:path_number] != nil
-#      if src_switch == 16 and src_switch =="17"
- #        puts "AAA===#{src_switch}"
-  #     end
-      intermediate = @path[src_switch][dst_switch]["no.2switch"]
-  #  elsif
+    if @path[src_switch][dst_switch][:path_number] 
+      puts "comen!!!"
+      intermediate  = get_another_intermediate(src_switch, dst_switch)
+    else
       intermediate = @path[src_switch][dst_switch][:intermediate_dpid]
+    end
     #puts "src = #{src_switch}, dst =#{dst_switch}, inter = #{@path[src_switch][dst_switch][:intermediate_dpid]}"
-  #  end
     return [] unless intermediate
     return get_raw_path(src_switch, intermediate)\
     + [intermediate]\
     + get_raw_path(intermediate, dst_switch)
   end
+
+  def get_another_intermediate src_switch, dst_switch
+    check1 = @path[src_switch][dst_switch][:intermediate_dpid]
+    check2 = @path[src_switch][dst_switch]["no.2switch"]
+    if @inter_switches.include?(check1)
+      puts "before = #{@inter_switches}"
+      @inter_switches.delete(check1)
+      @inter_switches.push(check2) unless @inter_switches.include?(check2)
+      puts "after =  #{@inter_switches}"
+      return @path[src_switch][dst_switch]["no.2switch"]
+    else
+      @inter_switches.push(check1) unless @inter_switches.include?(check1)
+      puts "aaa"
+      return @path[src_switch][dst_switch][:intermediate_dpid]
+
+    end
+  end
+
 
 end
