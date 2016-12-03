@@ -172,17 +172,24 @@ class TopologyController
   def get_another_intermediate src_switch, dst_switch
     check1 = @path[src_switch][dst_switch][:intermediate_dpid]
     check2 = @path[src_switch][dst_switch]["no.2switch"]
-    if @inter_switches.include?(check1)
-      puts "before = #{@inter_switches}"
-      @inter_switches.delete(check1)
-      @inter_switches.push(check2) unless @inter_switches.include?(check2)
-      puts "after =  #{@inter_switches}"
-      return @path[src_switch][dst_switch]["no.2switch"]
-    else
-      @inter_switches.push(check1) unless @inter_switches.include?(check1)
-      puts "aaa"
-      return @path[src_switch][dst_switch][:intermediate_dpid]
-
+    if @inter_switches.include?(check1) and @inter_switches.include?(check2)
+      puts "1"
+      @inter_switches.delete(check2)
+#      puts "after =  #{@inter_switches}"
+      return check1
+    elsif @inter_switches.include?(check1) and !@inter_switches.include?(check2)
+       puts "2 =  #{@inter_switches}"
+       @inter_switches.push(check2)
+     # puts "2 =  #{@inter_switches}"
+      return check2
+     elsif !@inter_switches.include?(check1) and @inter_switches.include?(check2)
+       puts "3"
+       @inter_switches.push(check1)
+       return check1
+     else !@inter_switches.include?(check1) and !@inter_switches.include?(check2)
+       puts "4"
+       @inter_switches.push(check2)
+       return check2
     end
   end
 
