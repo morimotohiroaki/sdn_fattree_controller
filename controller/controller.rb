@@ -78,7 +78,7 @@ class BcastController < Controller # (1)
     # for debuggin show all new packets
      mac = Util.get_mac_address(packet_in)
      ip = Util.get_ip_address(packet_in)
-      puts "new packet arrived... on #{dpid}: #{mac[:source]},"\
+#      puts "new packet arrived... on #{dpid}: #{mac[:source]},"\
      "#{ip[:source]} -> #{mac[:target]}, #{ip[:target]}" unless packet_in.lldp?
       
     if packet_in.lldp?
@@ -104,6 +104,8 @@ class BcastController < Controller # (1)
         install_path dst_mac_map, src_mac_map, mac[:target], ip[:target],\
         mac[:source], ip[:source], packet_in
         packet_out dpid, packet_in, out_port.to_i
+      #elsif mac[:target] == "00:00:00:00:00:00" #tamani baguru
+       # puts "00!!00!!"
       else
         puts "Dont know this packet. Flooding..."
         packet_out dpid, packet_in, OFPP_FLOOD
@@ -169,7 +171,7 @@ class BcastController < Controller # (1)
     src_switch = src_mac_map[:dpid]
     dst_switch = dst_mac_map[:dpid]
     final_port = dst_mac_map[:in_port]
-    r = @network.get_path(src_switch, dst_switch, final_port)
+    r = @network.get_path1(src_switch, dst_switch, final_port)
     r.each do | sw |
       flow_mod(sw[:dpid], mac_src, ip_src, mac_dst, ip_dst, packet_in, sw[:out_port])
     end
@@ -177,7 +179,7 @@ class BcastController < Controller # (1)
   end
   
   def flow_mod dpid, mac_src, ip_src, mac_dst, ip_dst, packet_in, port_number
-    puts "installing #{dpid}: #{mac_src}, #{ip_src} => #{ip_dst}, #{mac_dst}"
+#    puts "installing #{dpid}: #{mac_src}, #{ip_src} => #{ip_dst}, #{mac_dst}"
     send_flow_mod_add(dpid,
                       :match => Match.new(:dl_src => mac_src,
                                           :nw_src => ip_src,
@@ -251,12 +253,12 @@ class BcastController < Controller # (1)
     master_mac = @network.topology.ip_mac[master]
     # master_mac = "00:10:18:27:F4:6C"
     puts "broadcasting node is #{master}, #{master_mac}"
+    src_sw = @network.topology.mac_map[@network.topology.ip_mac[master]][:dpid]
+    in_port = @network.topology.mac_map[@network.topology.ip_mac[master]][:in_port]
     slaves.each do | s |
-      src_sw = @network.topology.mac_map[@network.topology.ip_mac[master]][:dpid]
-      in_port = @network.topology.mac_map[@network.topology.ip_mac[master]][:in_port]
       dst_sw = @network.topology.mac_map[@network.topology.ip_mac[s]][:dpid]
       final_port = @network.topology.mac_map[@network.topology.ip_mac[s]][:in_port]
-      p = @network.get_path(src_sw, dst_sw, final_port)
+      p = @network.get_path2(src_sw, dst_sw, final_port)
       p.each do | map |
         sw = map[:dpid]
         out_port = map[:out_port].to_i
