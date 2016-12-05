@@ -1,0 +1,49 @@
+this is creating virtual research environment for SDN MPI
+all os is minimal centos 6.5
+1. install host os
+ a. install from net install
+   ethernet : em1     # could be change in start.sh
+   ip : 133.1.134.53  # 
+   hostname : pluto   # could be change in hostname.sh
+
+ b. set up nopassword to sudoer
+   # visudo
+   add line
+     huchka ALL=(ALL) NOPASSWD: ALL
+
+ c. copy all host folder to pluto
+   ssh pluto yum install openssh-clients -y
+   scp -r Host pluto:~/
+
+ d. execute shell
+   ssh pluto
+   ./start.sh  # this will install required packages and construct network (with 3 switches) 
+
+ e. install master
+   ./master.sh sdn-bridge local-bridge outside-bridge # those bridges are setted in start.sh
+     ex. ./master.sh br1 brlocal brout
+   eth0 : to sdn network (sdn-bridge) 00:00:00:00:00:01
+   eth1 : to cluster general network (local-bridge) aa:00:00:00:00:01
+   eth2 : to internet (outside-bridge)  aa:aa:00:00:00:01 133.1.134.54
+   hostname : venus
+
+ d. install slave
+   ./slave.sh vm-number(single digit) sdn-bridge local-bridge outside-bridge
+   ex. ./slave.sh 3 br2 brlocal
+
+
+
+2. setting on master
+  ssh slave yum install openssh-clients -y
+  copy cluster folder to master
+  scp -r Cluster master:~/
+  ./master.sh
+  need to write 0 to 1 in /etc/sysctl.conf ip4_forwarding = 0
+
+
+
+3. setting on slave
+  ssh slave yum install openssh-clients -y
+  scp slave.sh slave:~/
+  ssh slave
+  ./slave.sh vm-number

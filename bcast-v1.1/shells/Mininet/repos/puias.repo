@@ -1,0 +1,13 @@
+[PUIAS_6_core_Base]
+name=PUIAS core Base $releasever - $basearch
+mirrorlist=http://puias.math.ias.edu/data/puias/$releasever/$basearch/os/mirrorlist
+#baseurl=http://puias.math.ias.edu/data/puias/$releasever/$basearch/os
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-puias
+
+[PUIAS_6_core_Updates]
+name=PUIAS core Updates $releasever - $basearch
+mirrorlist=http://puias.math.ias.edu/data/puias/updates/$releasever/en/os/$basearch/mirrorlist
+#baseurl=http://puias.math.ias.edu/data/puias/updates/$releasever/en/os/$basearch
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-puias

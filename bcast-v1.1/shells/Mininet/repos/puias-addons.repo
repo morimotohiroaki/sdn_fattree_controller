@@ -1,0 +1,13 @@
+[PUIAS_6_addons]
+name=PUIAS addons Base $releasever - $basearch
+mirrorlist=http://www.puias.princeton.edu/data/puias/$releasever/$basearch/os/Addons/mirrorlist
+#baseurl=http://www.puias.princeton.edu/data/puias/addons/$releasever/$basearch/os/Addons
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-puias
+
+[PUIAS_6_addons_Updates]
+name=PUIAS addons Updates $releasever - $basearch
+mirrorlist=http://www.puias.princeton.edu/data/puias/updates/$releasever/en/addons/$basearch/mirrorlist
+#baseurl=http://www.puias.princeton.edu/data/puias/updates/$releasever/en/addons/$basearch
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-puias

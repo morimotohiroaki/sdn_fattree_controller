@@ -1,0 +1,6 @@
+[PUIAS_6_unsupported]
+name=PUIAS unsupported Base $releasever - $basearch
+mirrorlist=http://puias.math.ias.edu/data/puias/unsupported/$releasever/$basearch/mirrorlist
+#baseurl=http://puias.math.ias.edu/data/puias/unsupported/$releasever/$basearch
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-puias

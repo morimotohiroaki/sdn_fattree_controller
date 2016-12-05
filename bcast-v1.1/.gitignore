@@ -1,0 +1,17 @@
+*.pyc
+*.pyo
+*.py~
+*.py.bak
+old.*
+.*
+!.gitignore
+*.patch
+*.rej
+*.diff
+*.orig
+*.swp
+\#*\#
+*~
+*.o
+test
+gtest
