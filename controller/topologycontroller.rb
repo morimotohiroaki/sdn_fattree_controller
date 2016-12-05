@@ -162,7 +162,7 @@ class TopologyController
      aaa = 0
      return aaa
     else 
-     bbb = 1
+     bbb = -1
      return bbb
     end
   end
@@ -178,7 +178,8 @@ class TopologyController
     end
     if @path[src_switch][dst_switch][:path_number] and flag == 1 
       puts "comen!!!"
-      intermediate  = get_another_intermediate(src_switch, dst_switch)
+     # intermediate  = get_another_intermediate(src_switch, dst_switch)
+      intermediate = @path[src_switch][dst_switch]["no.2switch"]
     else
       intermediate = @path[src_switch][dst_switch][:intermediate_dpid]
     end

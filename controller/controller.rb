@@ -262,13 +262,13 @@ class BcastController < Controller # (1)
       abc = @network.check_check src_sw, dst_sw
       if abc == 0
        puts "aagsio"
-#        q = @network.get_path(src_sw, dst_sw, final_port, 1)     
-#        q.each do | map |
-#          sw1 = map[:dpid]
-#          out_port = map[:out_port].to_i
-#          @outPorts[sw1] = [] unless @outPorts.key?(sw1)
-#          @outPorts[sw1] << out_port unless @outPorts[sw1].include?(out_port)
-#        end
+        q = @network.get_path(src_sw, dst_sw, final_port, 1)     
+        q.each do | map |
+          sw1 = map[:dpid]
+          out_port = map[:out_port].to_i
+          @outPorts[sw1] = [] unless @outPorts.key?(sw1)
+          @outPorts[sw1] << out_port unless @outPorts[sw1].include?(out_port)
+        end
       end
       p = @network.get_path(src_sw, dst_sw, final_port, 0)
       p.each do | map |
