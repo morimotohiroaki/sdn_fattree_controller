@@ -88,9 +88,20 @@ class Topology
    # puts "traffic  = #{@traffic_monitor2[sw][port]}"
     @traffic_monitor1[sw][port] = rx_bytes.to_i - @traffic_monitor2[sw][port].to_i
     @traffic_monitor2[sw][port] = rx_bytes
-    if port == 4
-      puts "!!!#{sw} (#{port}) have #{@traffic_monitor1[sw][port]}"
-    end
+   #  puts "!!!#{sw} (#{port}) have #{@traffic_monitor1[sw][port]}"
+  end
+
+  def caluculate_link_packets src_sw, mid_sw, dst_sw
+    total = -1
+    #puts "port = #{@adjacency[src_sw][mid_sw]}"
+    puts "#{@traffic_monitor1[src_sw][@adjacency[src_sw][mid_sw]]}"
+    first = @traffic_monitor1[src_sw][@adjacency[src_sw][mid_sw]] # if @traffic_monitor1[src_sw][@adjacency[src_sw][mid_sw]]
+    second =@traffic_monitor1[mid_sw][@adjacency[mid_sw][src_sw]] #if @traffic_monitor1[mid_sw][@adjacency[mid_sw][src_sw]]
+    third = @traffic_monitor1[dst_sw][@adjacency[dst_sw][mid_sw]] #if @traffic_monitor1[mid_sw][@adjacency[dst_sw][mid_sw]]
+    fourth =@traffic_monitor1[mid_sw][@adjacency[mid_sw][dst_sw]] #if @traffic_monitor1[mid_sw][@adjacency[mid_sw][dst_sw]]
+    # puts "creturn total #{first}"
+    total = first.to_i + second.to_i + third.to_i + fourth.to_i
+   return total
   end
 
 end

@@ -141,14 +141,14 @@ class BcastController < Controller # (1)
   end
 
   def send_port_stats
-   switches = [16,17,18,19,20] #kokowonantoka!!
+   switches = [16, 17, 18, 20, 21, 22] #kokowonantoka!!
    switches.each do | sw |
     send_message sw, PortStatsRequest.new
     end
   end
 
   def stats_reply datapath_id, stats_reply
-    puts "SW = #{datapath_id}"
+    #puts "SW = #{datapath_id}"
     stats_reply.stats.each do | port |
       @network.topology.update_traffic_size datapath_id, port.port_no, port.rx_bytes
       #puts "   port = #{port.port_no}"
@@ -156,11 +156,13 @@ class BcastController < Controller # (1)
     end
   end
 
-  def get_traffic_stats(src_sw, sw, dst_sw)
+  def get_traffic_stats src_sw, mid_sw, dst_sw
     #database karaha ouhuku no total packets ga return
-    first =  database[sw][@network.topology[sw][src_sw]]
-    second = database[sw][@network.topology[sw][dst_sw]]
-   return first + second
+    puts "det_traffic_stats1"
+    first =  @network.topology.caluculate_link_packets(src_sw, mid_sw, dst_sw)
+    second = @network.topology.caluculate_link_packets(src_sw, mid_sw, dst_sw)
+    puts "det_traffic_stats"
+   return first.to_i + second.to_i
   end
 
   private
@@ -283,32 +285,37 @@ class BcastController < Controller # (1)
       dst_sw = @network.topology.mac_map[@network.topology.ip_mac[s]][:dpid]
       final_port = @network.topology.mac_map[@network.topology.ip_mac[s]][:in_port]
       another_sw = @network.another_route? src_sw, dst_sw
+      puts "nandeyanenn!!!"
+      puts "another = #{another_sw}"
       if another_sw != -1
        # select which is better another_sw or default_sw
        # judge by number of packets
-       #images below
-       # count1 = get_traffic_stats(src_sw, another_sw, dst_sw)
-       # count2 = get_traffic_stats(src_sw ,default_sw ,dst_sw)
-       # if count1 <count2
-       #   p = @network.get_path(src_sw, dst_sw, final_port, 1)
-       #   p.each do | map |
-       #   sw = map[:dpid]
-       #   out_port = map[:out_port].to_i
-       #   @outPorts[sw] = [] unless @outPorts.key?(sw)
-       #   @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
-       #else
-       #   p = @network.get_path(src_sw, dst_sw, final_port, 0)
-       #   p.each do | map |
-       #   sw = map[:dpid]
-       #   out_port = map[:out_port].to_i
-       #   @outPorts[sw] = [] unless @outPorts.key?(sw)
-       #   @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
-       #end
-       # puts "send message #{another_sw} and "
-       # send_message another_sw, PortStatsRequest.new
+       #images below 
+        default_sw = @network.get_intermediate_dpid src_sw, dst_sw
+        puts "default_sw = #{default_sw}"
+        count1 = get_traffic_stats(src_sw, another_sw, dst_sw)
+        count2 = get_traffic_stats(src_sw, default_sw ,dst_sw)
+        puts "count1 =#{count1}"
+        puts "count2 =#{count2}"
         puts "judge best way"
-      end #imadake
-     # else imadake
+        if count1 < count2
+          p = @network.get_path(src_sw, dst_sw, final_port, 1)
+          p.each do | map |
+            sw = map[:dpid]
+            out_port = map[:out_port].to_i
+            @outPorts[sw] = [] unless @outPorts.key?(sw)
+            @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
+          end
+        else
+          p = @network.get_path(src_sw, dst_sw, final_port, 0)
+          p.each do | map |
+            sw = map[:dpid]
+            out_port = map[:out_port].to_i
+            @outPorts[sw] = [] unless @outPorts.key?(sw)
+            @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
+          end
+        end
+        else 
         p = @network.get_path(src_sw, dst_sw, final_port, 0)
         p.each do | map |
           sw = map[:dpid]
@@ -316,7 +323,7 @@ class BcastController < Controller # (1)
           @outPorts[sw] = [] unless @outPorts.key?(sw)
           @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
         end
-     # end #imadake
+      end 
     end
     @outPorts.each do | dpid, out_ports |
       puts "#{dpid} : #{out_ports} installing."

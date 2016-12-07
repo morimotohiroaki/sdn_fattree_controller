@@ -212,4 +212,7 @@ class TopologyController
     end
   end
 
+  def get_intermediate_dpid src_sw, dst_sw
+    return @path[src_sw][dst_sw][:intermediate_dpid]
+  end
 end
