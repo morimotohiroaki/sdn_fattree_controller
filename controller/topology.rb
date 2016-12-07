@@ -67,7 +67,7 @@ class Topology
     self.each_switch do | dpida |
       if @adjacency.include?(dpida)
         @adjacency[dpida].each do | dpidb, porta |
-          # puts "#{dpida} (#{porta}) -> #{dpidb}"
+            puts "#{dpida} (#{porta}) -> #{dpidb}"
         end
       end
     end

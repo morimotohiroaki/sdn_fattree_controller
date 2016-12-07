@@ -5,6 +5,7 @@ require 'utilities'
 class BcastController < Controller # (1)
   # periodic_timer_event :flood_lldp_frames, 5
   # periodic_timer_event :test_duplication_rule, 2
+  periodic_timer_event :send_port_stats, 2
 
   def start # (2)
     #include Trema::Port
@@ -139,6 +140,28 @@ class BcastController < Controller # (1)
     end
   end
 
+  def send_port_stats
+   switches = [16, 17,18,20,21,22]
+   switches.each do | sw |
+    send_message sw, PortStatsRequest.new
+    end
+  end
+
+  def stats_reply datapath_id, stats_reply
+    puts "SW = #{datapath_id}"
+    stats_reply.stats.each do | sw |
+      puts "   port = #{sw.port_no}"
+      #puts "    bytes =#{sw.rx_bytes}"
+    end
+  end
+
+  def get_traffic_stats(src_sw, sw, dst_sw)
+    #database karaha ouhuku no total packets ga return
+    first = database[sw][@network.topology[sw][src_sw]]
+    second = database[sw][@network.topology[sw][dst_sw]]
+   return first + second
+  end
+
   private
 
   def read_topology
@@ -258,24 +281,38 @@ class BcastController < Controller # (1)
     slaves.each do | s |
       dst_sw = @network.topology.mac_map[@network.topology.ip_mac[s]][:dpid]
       final_port = @network.topology.mac_map[@network.topology.ip_mac[s]][:in_port]
-      puts "wh!!!!"
-      abc = @network.check_check src_sw, dst_sw
-      if abc == 0
-       puts "aagsio"
-        q = @network.get_path(src_sw, dst_sw, final_port, 1)     
-        q.each do | map |
-          sw1 = map[:dpid]
+      another_sw = @network.another_route? src_sw, dst_sw
+      if another_sw != -1
+       # select which is better another_sw or default_sw
+       # judge by number of packets
+       #images below
+       # count1 = get_traffic_stats(src_sw, another_sw, dst_sw)
+       # count2 = get_traffic_stats(src_sw ,default_sw ,dst_sw)
+       # if count1 <count2
+       #   p = @network.get_path(src_sw, dst_sw, final_port, 1)
+       #   p.each do | map |
+       #   sw = map[:dpid]
+       #   out_port = map[:out_port].to_i
+       #   @outPorts[sw] = [] unless @outPorts.key?(sw)
+       #   @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
+       #else
+       #   p = @network.get_path(src_sw, dst_sw, final_port, 0)
+       #   p.each do | map |
+       #   sw = map[:dpid]
+       #   out_port = map[:out_port].to_i
+       #   @outPorts[sw] = [] unless @outPorts.key?(sw)
+       #   @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
+       #end
+       # puts "send message #{another_sw} and "
+       # send_message another_sw, PortStatsRequest.new
+      else
+        p = @network.get_path(src_sw, dst_sw, final_port, 0)
+        p.each do | map |
+          sw = map[:dpid]
           out_port = map[:out_port].to_i
-          @outPorts[sw1] = [] unless @outPorts.key?(sw1)
-          @outPorts[sw1] << out_port unless @outPorts[sw1].include?(out_port)
+          @outPorts[sw] = [] unless @outPorts.key?(sw)
+          @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
         end
-      end
-      p = @network.get_path(src_sw, dst_sw, final_port, 0)
-      p.each do | map |
-        sw = map[:dpid]
-        out_port = map[:out_port].to_i
-        @outPorts[sw] = [] unless @outPorts.key?(sw)
-        @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
       end
     end
     @outPorts.each do | dpid, out_ports |

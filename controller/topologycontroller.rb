@@ -72,7 +72,7 @@ class TopologyController
         end
       end
     end
-   # self.topology.display
+   self.topology.display
    # puts " "
     display_path
    # puts "count !"
@@ -105,6 +105,7 @@ class TopologyController
   # src_switch, dst_switch -> dpid
   # return [{:dpid=>dpid, :out_port=>port},]
   def get_path src_switch, dst_switch, final_port, flag
+  # flag = 0 -> default, flag = 1 ->another
     if src_switch == dst_switch
       p = [src_switch]
     else
@@ -156,14 +157,14 @@ class TopologyController
     #end
   end
 
-  def check_check src_sw, dst_sw
+
+  #check having another_route?
+  def another_route? src_sw, dst_sw
    puts "here!!!"
     if @path[src_sw][dst_sw][:path_number]
-     aaa = 0
-     return aaa
-    else 
-     bbb = -1
-     return bbb
+     return @path[src_sw][dst_sw]["no.2switch"]
+    else
+     return -1
     end
   end
   
@@ -177,8 +178,6 @@ class TopologyController
       return nil
     end
     if @path[src_switch][dst_switch][:path_number] and flag == 1 
-      puts "comen!!!"
-     # intermediate  = get_another_intermediate(src_switch, dst_switch)
       intermediate = @path[src_switch][dst_switch]["no.2switch"]
     else
       intermediate = @path[src_switch][dst_switch][:intermediate_dpid]
@@ -190,6 +189,7 @@ class TopologyController
     + get_raw_path(intermediate, dst_switch, flag)
   end
 
+  # for test
   def get_another_intermediate src_switch, dst_switch
     check1 = @path[src_switch][dst_switch][:intermediate_dpid]
     check2 = @path[src_switch][dst_switch]["no.2switch"]
