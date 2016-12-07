@@ -141,7 +141,7 @@ class BcastController < Controller # (1)
   end
 
   def send_port_stats
-   switches = [16, 17,18,20,21,22]
+   switches = [16,17,18,19,20] #kokowonantoka!!
    switches.each do | sw |
     send_message sw, PortStatsRequest.new
     end
@@ -149,15 +149,16 @@ class BcastController < Controller # (1)
 
   def stats_reply datapath_id, stats_reply
     puts "SW = #{datapath_id}"
-    stats_reply.stats.each do | sw |
-      puts "   port = #{sw.port_no}"
-      #puts "    bytes =#{sw.rx_bytes}"
+    stats_reply.stats.each do | port |
+      @network.topology.update_traffic_size datapath_id, port.port_no, port.rx_bytes
+      #puts "   port = #{port.port_no}"
+      #puts "    bytes =#{port.rx_bytes}"
     end
   end
 
   def get_traffic_stats(src_sw, sw, dst_sw)
     #database karaha ouhuku no total packets ga return
-    first = database[sw][@network.topology[sw][src_sw]]
+    first =  database[sw][@network.topology[sw][src_sw]]
     second = database[sw][@network.topology[sw][dst_sw]]
    return first + second
   end
@@ -305,7 +306,9 @@ class BcastController < Controller # (1)
        #end
        # puts "send message #{another_sw} and "
        # send_message another_sw, PortStatsRequest.new
-      else
+        puts "judge best way"
+      end #imadake
+     # else imadake
         p = @network.get_path(src_sw, dst_sw, final_port, 0)
         p.each do | map |
           sw = map[:dpid]
@@ -313,7 +316,7 @@ class BcastController < Controller # (1)
           @outPorts[sw] = [] unless @outPorts.key?(sw)
           @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
         end
-      end
+     # end #imadake
     end
     @outPorts.each do | dpid, out_ports |
       puts "#{dpid} : #{out_ports} installing."

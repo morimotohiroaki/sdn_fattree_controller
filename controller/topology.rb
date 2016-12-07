@@ -18,6 +18,8 @@ class Topology
     @adjacency = {}   # [dpid1][dpid2] = port number, dpid1 (port)-> dpid2
     @mac_map = {}     # { mac_addr -> { :dpid => dpid, :in_port => port number }, }
     @ip_mac = {}      # { ip_address => mac address,  }
+    @traffic_monitor1 = {} #[dpid1][dpid2] = traffic_total_size
+    @traffic_monitor2 = {} #[dpid1][dpid2] = traffic_current_size
   end
 
   def add_switch dpid
@@ -78,4 +80,17 @@ class Topology
     end if @ip_mac
   end
   
+  def update_traffic_size sw, port, rx_bytes
+    @traffic_monitor1[sw] = {}  unless @traffic_monitor1.include?(sw)
+    @traffic_monitor2[sw] = {}  unless @traffic_monitor2.include?(sw)
+   # if port == 4
+   # puts "rx_bytes = #{rx_bytes}"
+   # puts "traffic  = #{@traffic_monitor2[sw][port]}"
+    @traffic_monitor1[sw][port] = rx_bytes.to_i - @traffic_monitor2[sw][port].to_i
+    @traffic_monitor2[sw][port] = rx_bytes
+    if port == 4
+      puts "!!!#{sw} (#{port}) have #{@traffic_monitor1[sw][port]}"
+    end
+  end
+
 end
