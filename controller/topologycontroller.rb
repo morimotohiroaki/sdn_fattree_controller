@@ -105,7 +105,7 @@ class TopologyController
   # src_switch, dst_switch -> dpid
   # return [{:dpid=>dpid, :out_port=>port},]
   def get_path src_switch, dst_switch, final_port, flag
-  # flag = 0 -> default, flag = 1 ->another
+  # flag=0 -> default_sw, flag=1 ->another_sw
     if src_switch == dst_switch
       p = [src_switch]
     else
@@ -160,7 +160,7 @@ class TopologyController
 
   #check having another_route?
   def another_route? src_sw, dst_sw
-   puts "here!!!"
+   #puts "here!!!"
     if @path[src_sw][dst_sw][:path_number]
      return @path[src_sw][dst_sw]["no.2switch"]
     else
@@ -215,4 +215,5 @@ class TopologyController
   def get_intermediate_dpid src_sw, dst_sw
     return @path[src_sw][dst_sw][:intermediate_dpid]
   end
+
 end

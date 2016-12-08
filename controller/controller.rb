@@ -17,7 +17,7 @@ class BcastController < Controller # (1)
     @outPorts    # {dpid => [], }
     @mpi_id_mac = ""  # string
     @mpi_id_ip  = ""  # string
-
+    @switches = [] #for send_port_stats
     @installed = 0
   end
 
@@ -27,6 +27,7 @@ class BcastController < Controller # (1)
     # for skipping switch with no active ports
     begin
       puts "sending feature request to #{dpid}"
+      @switches << dpid unless @switches.include?(dpid)
       send_message dpid, FeaturesRequest.new
     end unless skip_switch? dpid
   end
@@ -141,8 +142,8 @@ class BcastController < Controller # (1)
   end
 
   def send_port_stats
-   switches = [16, 17, 18, 20, 21, 22] #kokowonantoka!!
-   switches.each do | sw |
+   #@switches = [16, 17, 18, 20, 21, 22] #kokowonantoka!!
+    @switches.each do | sw |
     send_message sw, PortStatsRequest.new
     end
   end
@@ -150,7 +151,7 @@ class BcastController < Controller # (1)
   def stats_reply datapath_id, stats_reply
     #puts "SW = #{datapath_id}"
     stats_reply.stats.each do | port |
-      @network.topology.update_traffic_size datapath_id, port.port_no, port.rx_bytes
+      @network.topology.update_traffic_monitor datapath_id, port.port_no, port.rx_bytes
       #puts "   port = #{port.port_no}"
       #puts "    bytes =#{port.rx_bytes}"
     end
@@ -158,10 +159,8 @@ class BcastController < Controller # (1)
 
   def get_traffic_stats src_sw, mid_sw, dst_sw
     #database karaha ouhuku no total packets ga return
-    puts "det_traffic_stats1"
     first =  @network.topology.caluculate_link_packets(src_sw, mid_sw, dst_sw)
     second = @network.topology.caluculate_link_packets(src_sw, mid_sw, dst_sw)
-    puts "det_traffic_stats"
    return first.to_i + second.to_i
   end
 
@@ -285,44 +284,28 @@ class BcastController < Controller # (1)
       dst_sw = @network.topology.mac_map[@network.topology.ip_mac[s]][:dpid]
       final_port = @network.topology.mac_map[@network.topology.ip_mac[s]][:in_port]
       another_sw = @network.another_route? src_sw, dst_sw
-      puts "nandeyanenn!!!"
-      puts "another = #{another_sw}"
+      #puts "another = #{another_sw}"
       if another_sw != -1
-       # select which is better another_sw or default_sw
-       # judge by number of packets
-       #images below 
+        # select which is better another_sw or default_sw
+        # judge by number of packets
         default_sw = @network.get_intermediate_dpid src_sw, dst_sw
-        puts "default_sw = #{default_sw}"
+          # puts "default_sw = #{default_sw}"
         count1 = get_traffic_stats(src_sw, another_sw, dst_sw)
         count2 = get_traffic_stats(src_sw, default_sw ,dst_sw)
-        puts "count1 =#{count1}"
-        puts "count2 =#{count2}"
+          # puts "count1 =#{count1}"
+          # puts "count2 =#{count2}"
         puts "judge best way"
         if count1 < count2
           p = @network.get_path(src_sw, dst_sw, final_port, 1)
-          p.each do | map |
-            sw = map[:dpid]
-            out_port = map[:out_port].to_i
-            @outPorts[sw] = [] unless @outPorts.key?(sw)
-            @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
-          end
+          entry_path_to_sw p
+          @network.topology.registar_information src_sw, dst_sw, another_sw, default_sw
         else
           p = @network.get_path(src_sw, dst_sw, final_port, 0)
-          p.each do | map |
-            sw = map[:dpid]
-            out_port = map[:out_port].to_i
-            @outPorts[sw] = [] unless @outPorts.key?(sw)
-            @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
-          end
+          entry_path_to_sw p
+          @network.topology.registar_information src_sw, dst_sw, default_sw, another_sw
         end
-        else 
+      else 
         p = @network.get_path(src_sw, dst_sw, final_port, 0)
-        p.each do | map |
-          sw = map[:dpid]
-          out_port = map[:out_port].to_i
-          @outPorts[sw] = [] unless @outPorts.key?(sw)
-          @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
-        end
       end 
     end
     @outPorts.each do | dpid, out_ports |
@@ -344,6 +327,16 @@ class BcastController < Controller # (1)
       SendOutPort.new(each)
     end
   end
+
+  #registar out_port of each switches
+  def entry_path_to_sw p
+    p.each do | map |
+      sw = map[:dpid]
+      out_port = map[:out_port].to_i
+      @outPorts[sw] = [] unless @outPorts.key?(sw)
+      @outPorts[sw] << out_port unless @outPorts[sw].include?(out_port)
+    end
+  end 
   
   def generate_mpi_id
     @mpi_id_mac = "00:e0:81:fa:fa:fa"
