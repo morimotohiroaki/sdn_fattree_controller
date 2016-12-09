@@ -6,6 +6,7 @@ class BcastController < Controller # (1)
   # periodic_timer_event :flood_lldp_frames, 5
   # periodic_timer_event :test_duplication_rule, 2
   periodic_timer_event :send_port_stats, 2
+  periodic_timer_event :update_traffic_information, 5
 
   def start # (2)
     #include Trema::Port
@@ -162,6 +163,19 @@ class BcastController < Controller # (1)
     first =  @network.topology.caluculate_link_packets(src_sw, mid_sw, dst_sw)
     second = @network.topology.caluculate_link_packets(src_sw, mid_sw, dst_sw)
    return first.to_i + second.to_i
+  end
+
+  def update_traffic_information
+    checks = @network.topology.get_registar_paths
+    checks.each do | num |
+      #puts "num[1] = #{num[1][1]}"
+      current_path_size = get_traffic_stats(num[1][0], num[1][2], num[1][1])
+      checked_path_size = get_traffic_stats(num[1][0], num[1][3], num[1][1])
+      puts "regulary checking"
+      if current_path_size >= checked_path_size
+       puts "change the route!"
+      end
+    end
   end
 
   private

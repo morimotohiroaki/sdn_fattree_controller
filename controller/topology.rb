@@ -21,7 +21,7 @@ class Topology
     @currently_monitor = {} #[dpid1][dpid2] = traffic_total_size
     @temporary_monitor = {} #[dpid1][dpid2] = traffic_current_size
     @check_list = {} #[count][0]=dst_sw, [1]=dst_sw, [2]=current_sw, [3]=check_sw
-    count = 0
+    @count = 0
   end
 
   def add_switch dpid
@@ -108,14 +108,18 @@ class Topology
   end
 
   def registar_information src_sw, dst_sw, current_sw, check_sw
-    count = count.to_i + 1
+    @count = @count.to_i + 1
     puts "sssss"
-    @check_list[count.to_i] = {}
-    @check_list[count.to_i][0] = src_sw
-    @check_list[count.to_i][1] = dst_sw
-    @check_list[count.to_i][2] = current_sw
-    @check_list[count.to_i][3] = check_sw
-    puts "@check_list = #{@check_list[count]}"
+    @check_list[@count.to_i] = {}
+    @check_list[@count.to_i][0] = src_sw
+    @check_list[@count.to_i][1] = dst_sw
+    @check_list[@count.to_i][2] = current_sw
+    @check_list[@count.to_i][3] = check_sw
+    puts "@check_list[#{@count}] = #{@check_list[@count]}"
+  end
+
+  def get_registar_paths
+    return @check_list
   end
 
 end
