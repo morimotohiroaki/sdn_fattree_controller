@@ -90,7 +90,7 @@ class Topology
    # puts "traffic  = #{@temporary_monitor[sw][port]}"
     @currently_monitor[sw][port] = rx_bytes.to_i - @temporary_monitor[sw][port].to_i
     @temporary_monitor[sw][port] = rx_bytes
-     puts "#{sw} (#{port}) have #{@currently_monitor[sw][port]}" if port < 10
+    # puts "#{sw} (#{port}) have #{@currently_monitor[sw][port]}" if port < 10
   end
 
   def caluculate_link_packets src_sw, mid_sw, dst_sw

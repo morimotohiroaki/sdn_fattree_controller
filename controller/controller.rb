@@ -18,7 +18,7 @@ class BcastController < Controller # (1)
     @outPorts    # {dpid => [], }
     @mpi_id_mac = ""  # string
     @mpi_id_ip  = ""  # string
-    @switches = [] #for send_port_stats
+    #@switches = [] #for send_port_stats
     @installed = 0
   end
 
@@ -28,7 +28,7 @@ class BcastController < Controller # (1)
     # for skipping switch with no active ports
     begin
       puts "sending feature request to #{dpid}"
-      @switches << dpid unless @switches.include?(dpid)
+      #@switches << dpid unless @switches.include?(dpid)
       send_message dpid, FeaturesRequest.new
     end unless skip_switch? dpid
   end
@@ -50,24 +50,24 @@ class BcastController < Controller # (1)
 
   # temporary def for testing
   # not using now
-  def test_duplication_rule
-    if @network.topology.ip_mac.length < 7
-      puts "ip_mac length is #{@network.topology.ip_mac.length}"
-    end
-    if @network.topology.ip_mac.length == 7 and @installed == 0
-      ipstring = "10.0.0.1 10.0.0.2 10.0.0.3 10.0.0.4 10.0.0.5 10.0.0.6 10.0.0.7"
-      ips = ipstring.split(" ")
-      master = ips.shift
-      slaves = ips
-      puts "master is : " + master.to_s
-      puts "slaves are : " + slaves.to_s
-      @outPorts = {}
-      generate_mpi_id
-      install_duplication_rules master, slaves
-      puts "Ready to broadcast data"
-      @installed = 1
-    end
-  end
+#  def test_duplication_rule
+#    if @network.topology.ip_mac.length < 7
+#      puts "ip_mac length is #{@network.topology.ip_mac.length}"
+#    end
+#    if @network.topology.ip_mac.length == 7 and @installed == 0
+#      ipstring = "10.0.0.1 10.0.0.2 10.0.0.3 10.0.0.4 10.0.0.5 10.0.0.6 10.0.0.7"
+#      ips = ipstring.split(" ")
+#      master = ips.shift
+#      slaves = ips
+#      puts "master is : " + master.to_s
+#      puts "slaves are : " + slaves.to_s
+#      @outPorts = {}
+#      generate_mpi_id
+#      install_duplication_rules master, slaves
+#      puts "Ready to broadcast data"
+#      @installed = 1
+#    end
+#  end
 
   def packet_in dpid, packet_in
     # checking for whether duplication rules on switch or not
@@ -126,8 +126,8 @@ class BcastController < Controller # (1)
       #data = "10.0.0.1 10.0.0.4 10.0.0.3 10.0.0.2"
       puts "Recieved data from MPI application : " + data.to_s
       ips = data.split(" ")
-      ips = create_ring_topology ips
-      puts "Created virtual effective ring topology"
+      #ips = create_ring_topology ips
+      #puts "Created virtual effective ring topology"
       master = ips.shift
       slaves = ips
       puts "master is : " + master.to_s
@@ -144,7 +144,8 @@ class BcastController < Controller # (1)
 
   def send_port_stats
    #@switches = [16, 17, 18, 20, 21, 22] #kokowonantoka!!
-    @switches.each do | sw |
+    sws = @network.topology.switches.dup
+    sws.each do | sw |
     send_message sw, PortStatsRequest.new
     end
   end
@@ -156,6 +157,7 @@ class BcastController < Controller # (1)
       #puts "   port = #{port.port_no}"
       #puts "    bytes =#{port.rx_bytes}"
     end
+    #puts ""
   end
 
   def get_traffic_stats src_sw, mid_sw, dst_sw
@@ -171,9 +173,12 @@ class BcastController < Controller # (1)
       #puts "num[1] = #{num[1][1]}"
       current_path_size = get_traffic_stats(num[1][0], num[1][2], num[1][1])
       checked_path_size = get_traffic_stats(num[1][0], num[1][3], num[1][1])
-      puts "regulary checking"
-      if current_path_size >= checked_path_size
-       puts "change the route!"
+      #puts "regulary checking"
+      ## not >= , right >
+
+      if current_path_size > checked_path_size
+      #""send_flow_mod_modify""
+      # puts "change the route!"
       end
     end
   end
