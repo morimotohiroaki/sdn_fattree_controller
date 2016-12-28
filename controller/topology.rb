@@ -71,14 +71,14 @@ class Topology
     self.each_switch do | dpida |
       if @adjacency.include?(dpida)
         @adjacency[dpida].each do | dpidb, porta |
-            puts "#{dpida} (#{porta}) -> #{dpidb}"
+#            puts "#{dpida} (#{porta}) -> #{dpidb}"
         end
       end
     end
 
     @ip_mac.each_pair do | ip, mac |
       mac_map = @mac_map[mac]
-      puts "#{ip} -> #{@ip_mac[ip]} => #{mac_map[:dpid]}, #{mac_map[:in_port]}"
+      #puts "#{ip} -> #{@ip_mac[ip]} => #{mac_map[:dpid]}, #{mac_map[:in_port]}"
     end if @ip_mac
   end
   
@@ -90,7 +90,8 @@ class Topology
    # puts "traffic  = #{@temporary_monitor[sw][port]}"
     @currently_monitor[sw][port] = rx_bytes.to_i - @temporary_monitor[sw][port].to_i
     @temporary_monitor[sw][port] = rx_bytes
-    # puts "#{sw} (#{port}) have #{@currently_monitor[sw][port]}" if port < 10
+   #  puts "#{sw} (#{port}) have #{@currently_monitor[sw][port]}" if port < 10
+   #  puts "#{@currently_monitor[sw]}"
   end
 
   def caluculate_link_packets src_sw, mid_sw, dst_sw
@@ -115,7 +116,7 @@ class Topology
     @check_list[@count.to_i][1] = dst_sw
     @check_list[@count.to_i][2] = current_sw
     @check_list[@count.to_i][3] = check_sw
-    puts "@check_list[#{@count}] = #{@check_list[@count]}"
+   # puts "@check_list[#{@count}] = #{@check_list[@count]}"
   end
 
   def get_registar_paths

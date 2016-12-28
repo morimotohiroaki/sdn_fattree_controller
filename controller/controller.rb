@@ -1,6 +1,7 @@
 
 require 'topologycontroller'
 require 'utilities'
+require 'dijkstra'
 
 class BcastController < Controller # (1)
   # periodic_timer_event :flood_lldp_frames, 5
@@ -299,6 +300,32 @@ class BcastController < Controller # (1)
     puts "broadcasting node is #{master}, #{master_mac}"
     src_sw = @network.topology.mac_map[@network.topology.ip_mac[master]][:dpid]
     in_port = @network.topology.mac_map[@network.topology.ip_mac[master]][:in_port]
+    # dijkstra master, slave
+    dij_data = {}
+    swsa = @network.topology.switches.dup
+    swsa.each do | sw1 |
+      dij_data[sw1] = []
+      mini_data = []
+      @network.topology.adjacency[sw1].each do | sw2 |
+        dst = sw2[0]
+        cost = 10
+        cell = [cost, dst]
+        mini_data.push(cell)
+      end
+      dij_data[sw1] = mini_data
+    end
+    puts "#{dij_data}"
+
+    g = Graph.new
+    dij_data.each do | nid, edges |
+      g.add_node(nid, edges)
+    end
+    g.set_start(src_sw)
+
+    path1 = g.route(5)
+    puts "path = #{path1}"
+
+    #end dijstra
     slaves.each do | s |
       dst_sw = @network.topology.mac_map[@network.topology.ip_mac[s]][:dpid]
       final_port = @network.topology.mac_map[@network.topology.ip_mac[s]][:in_port]
@@ -313,7 +340,7 @@ class BcastController < Controller # (1)
         count2 = get_traffic_stats(src_sw, default_sw ,dst_sw)
           # puts "count1 =#{count1}"
           # puts "count2 =#{count2}"
-        puts "judge best way"
+        #puts "judge best way"
         if count1 < count2
           p = @network.get_path(src_sw, dst_sw, final_port, 1)
           entry_path_to_sw p
@@ -327,6 +354,7 @@ class BcastController < Controller # (1)
         p = @network.get_path(src_sw, dst_sw, final_port, 0)
       end 
     end
+    puts "p = #{p}"
     @outPorts.each do | dpid, out_ports |
       puts "#{dpid} : #{out_ports} installing."
       puts "installing rule : #{master_mac} -> #{@mpi_id_mac} on #{dpid}..."
@@ -349,6 +377,7 @@ class BcastController < Controller # (1)
 
   #registar out_port of each switches
   def entry_path_to_sw p
+    puts "P = #{p}"
     p.each do | map |
       sw = map[:dpid]
       out_port = map[:out_port].to_i

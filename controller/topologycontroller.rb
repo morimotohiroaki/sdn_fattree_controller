@@ -45,12 +45,12 @@ class TopologyController
           if @path[swi][swk][:link_weight]  
             if @path[swk][swj][:link_weight]
               ikj_weight = @path[swi][swk][:link_weight] + @path[swk][swj][:link_weight]
-              if !@path[swi][swj][:link_weight]\
-                or ikj_weight < @path[swi][swj][:link_weight]
+              if !@path[swi][swj][:link_weight] or ikj_weight < @path[swi][swj][:link_weight]
                # puts "swk=#{swk}  swi=#{swi} swj=#{swj} swk=#{swj} !!!"
                # puts "pat = #{@path[swi][swj][:link_weight]}"
                # puts "ikj = #{ikj_weight}"
-                puts ""
+                 # if @path[swi][swk][:link_weight] > 1 or @path[swk][swj][:link_weight] > 1
+                 #   inte_
                 @path[swi][swj] = {:intermediate_dpid => swk, :link_weight => ikj_weight}
                # puts "#{swi} to #{swj} -> #{@path[swi][swj]}"
               elsif ikj_weight == @path[swi][swj][:link_weight]\
@@ -74,7 +74,7 @@ class TopologyController
     end
    self.topology.display
    # puts " "
-    display_path
+   display_path
    # puts "count !"
   end
 
