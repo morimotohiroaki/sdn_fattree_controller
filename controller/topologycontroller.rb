@@ -1,4 +1,3 @@
-
 require 'trema'
 require 'topology'
 
@@ -12,6 +11,7 @@ class TopologyController
     @switch_number = switch_number
     @path = {}        # [dpid1][dpid2] -> { :intermediate_dpid => dpid, :link_weight => weight }
     @level_sws = {}   # { 0=> [dpid,], }
+    @inter_switches = [] #[dpid1, dpid2, ...]
   end
 
   def ready?
@@ -41,32 +41,41 @@ class TopologyController
     @topology.each_switch do | swk |
       @topology.each_switch do | swi |
         @topology.each_switch do | swj |
-          if @path[swi][swk][:link_weight]
+          # puts "swk=#{swk}  swi=#{swi} swj=#{swj} swk=#{swj}"
+          if @path[swi][swk][:link_weight]  
             if @path[swk][swj][:link_weight]
-              ikj_weight = @path[swi][swk][:link_weight]\
-              + @path[swk][swj][:link_weight]
-              if !@path[swi][swj][:link_weight]\
-                or ikj_weight < @path[swi][swj][:link_weight]
-                puts "swi = #{swi}"
-                puts "swj = #{swj}"
+              ikj_weight = @path[swi][swk][:link_weight] + @path[swk][swj][:link_weight]
+              if !@path[swi][swj][:link_weight] or ikj_weight < @path[swi][swj][:link_weight]
+               # puts "swk=#{swk}  swi=#{swi} swj=#{swj} swk=#{swj} !!!"
                # puts "pat = #{@path[swi][swj][:link_weight]}"
-                puts "ikj = #{ikj_weight}"
-                puts ""
-                @path[swi][swj] = {:intermediate_dpid => swk,\
-                :link_weight => ikj_weight}
-
-              #elsif ikj_weight = 2 and ikj_weight = @path[swi][swj][:link_weight]
-                # puts "equal"
-                # @path[swi][swj] = {:intermediate_dpid => swk, :link_weight => @path[swi][swj][:link_weight]}
+               # puts "ikj = #{ikj_weight}"
+                 # if @path[swi][swk][:link_weight] > 1 or @path[swk][swj][:link_weight] > 1
+                 #   inte_
+                @path[swi][swj] = {:intermediate_dpid => swk, :link_weight => ikj_weight}
+               # puts "#{swi} to #{swj} -> #{@path[swi][swj]}"
+              elsif ikj_weight == @path[swi][swj][:link_weight]\
+                and @path[swi][swj][:link_weight] != 0\
+                and @path[swi][swj][:link_weight] != 1\
+                and @path[swi][swj][:intermediate_dpid] != swk \
+                and swi != swk and swj != swk
+                 # puts "intermidiate = #{@path[swi][swj][:intermediate_dpid]}"
+                 number_path = 2
+                 number_path = @path[swi][swj][:path_number] + 1 if @path[swi][swj][:path_number]
+                 number_switch = "no." + number_path.to_s  + "switch"
+                # puts "#{number_path}"
+                 #@path[swi][swj] = {:intermediate_dpid => swk, :link_weight => ikj_weight, :path_number => number_path}
+                 @path[swi][swj][:path_number] = number_path
+                 @path[swi][swj][number_switch] = swk
               end
             end
           end
         end
       end
     end
-    self.topology.display
-    puts " "
-    display_path
+   self.topology.display
+   # puts " "
+   display_path
+   # puts "count !"
   end
 
   def calculate_levels
@@ -95,11 +104,12 @@ class TopologyController
   # get switch and port list between src_switch and dst_switch
   # src_switch, dst_switch -> dpid
   # return [{:dpid=>dpid, :out_port=>port},]
-  def get_path src_switch, dst_switch, final_port
+  def get_path src_switch, dst_switch, final_port, flag
+  # flag=0 -> default_sw, flag=1 ->another_sw
     if src_switch == dst_switch
       p = [src_switch]
     else
-      p = get_raw_path(src_switch, dst_switch)
+      p = get_raw_path(src_switch, dst_switch, flag)
       return nil unless p
       p = [src_switch] + p + [dst_switch]
     end
@@ -120,7 +130,18 @@ class TopologyController
       end
     end
   end
-  
+ 
+  def display_path
+    @topology.each_switch do | swi |
+      @topology.each_switch do | swj |
+        puts swi.to_s + " to " + swj.to_s + " "\
+        + @path[swi][swj].to_s if @path[swi][swj] unless swi == swj 
+      end 
+    end 
+  end 
+
+
+ 
   def read_file
     File.open("topology-info").each_line do | each |
       if /(\d+)\s(\d+)\s(\d+)\s(\d+)/ =~ each
@@ -136,22 +157,63 @@ class TopologyController
     #end
   end
 
-  private
+
+  #check having another_route?
+  def another_route? src_sw, dst_sw
+   #puts "here!!!"
+    if @path[src_sw][dst_sw][:path_number]
+     return @path[src_sw][dst_sw]["no.2switch"]
+    else
+     return -1
+    end
+  end
   
   # get switches through path between src_switch and dst_switch
   # src_switch, dst_switch -> dpid
-  # return [src_switch, dpid1,..., dpidi, dst_switch]
-  def get_raw_path src_switch, dst_switch
+  # return [src_switch, dpid1,..., dpidi, dst_swi
+  def get_raw_path src_switch, dst_switch, flag
     if src_switch == dst_switch
       return []
     elsif !@path[src_switch][dst_switch][:link_weight]
       return nil
     end
-    intermediate = @path[src_switch][dst_switch][:intermediate_dpid]
+    if @path[src_switch][dst_switch][:path_number] and flag == 1 
+      intermediate = @path[src_switch][dst_switch]["no.2switch"]
+    else
+      intermediate = @path[src_switch][dst_switch][:intermediate_dpid]
+    end
+    #puts "src = #{src_switch}, dst =#{dst_switch}, inter = #{@path[src_switch][dst_switch][:intermediate_dpid]}"
     return [] unless intermediate
-    return get_raw_path(src_switch, intermediate)\
+    return get_raw_path(src_switch, intermediate, flag)\
     + [intermediate]\
-    + get_raw_path(intermediate, dst_switch)
+    + get_raw_path(intermediate, dst_switch, flag)
+  end
+
+  # for test
+  def get_another_intermediate src_switch, dst_switch
+    check1 = @path[src_switch][dst_switch][:intermediate_dpid]
+    check2 = @path[src_switch][dst_switch]["no.2switch"]
+    if @inter_switches.include?(check1) and @inter_switches.include?(check2)
+      puts "1"
+      @inter_switches.delete(check2)
+      return check1
+    elsif @inter_switches.include?(check1) and !@inter_switches.include?(check2)
+       puts "2 =  #{@inter_switches}"
+       @inter_switches.push(check2)
+      return check2
+     elsif !@inter_switches.include?(check1) and @inter_switches.include?(check2)
+       puts "3"
+       @inter_switches.push(check1)
+       return check1
+     else !@inter_switches.include?(check1) and !@inter_switches.include?(check2)
+       puts "4"
+       @inter_switches.push(check2)
+       return check2
+    end
+  end
+
+  def get_intermediate_dpid src_sw, dst_sw
+    return @path[src_sw][dst_sw][:intermediate_dpid]
   end
 
 end
